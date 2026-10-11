@@ -17,6 +17,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -67,7 +68,7 @@ public final class AfterimageMod implements ModInitializer {
             event(player, t, 2 * 60 * 20L, "Seus passos pareceram vir um bloco atrás.");
             event(player, t, 4 * 60 * 20L, "Não há motivo para conferir a lista de jogadores.");
             if (t == 6 * 60 * 20L) {
-                player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BIT, SoundCategory.AMBIENT, 0.15f, 0.45f);
+                play(player, SoundEvents.BLOCK_NOTE_BLOCK_BIT, SoundCategory.AMBIENT, 0.15f, 0.45f);
                 whisper(player, "Uma nota apareceu onde o cursor estava.");
             }
             if (t == 8 * 60 * 20L) {
@@ -75,14 +76,14 @@ public final class AfterimageMod implements ModInitializer {
             }
             if (t == 10 * 60 * 20L) {
                 whisper(player, "Este mundo existe há mais tempo do que você.");
-                player.playSoundToPlayer(SoundEvents.AMBIENT_CAVE, SoundCategory.AMBIENT, 0.25f, 0.6f);
+                play(player, SoundEvents.AMBIENT_CAVE, SoundCategory.AMBIENT, 0.25f, 0.6f);
             }
             if (t == 12 * 60 * 20L) spawnAnomaly(player);
             event(player, t, 14 * 60 * 20L, "Consigo ver o espaço entre os seus movimentos.");
             event(player, t, 16 * 60 * 20L, "Você pode parar a gravação quando quiser.");
             if (t == 18 * 60 * 20L) {
                 whisper(player, "Seu nome não está escrito no arquivo do mundo.");
-                player.playSoundToPlayer(SoundEvents.BLOCK_SCULK_SENSOR_CLICKING, SoundCategory.AMBIENT, 0.25f, 0.55f);
+                play(player, SoundEvents.BLOCK_SCULK_SENSOR_CLICKING, SoundCategory.AMBIENT, 0.25f, 0.55f);
             }
             if (t > 19 * 60 * 20L && t % 80 == 0) {
                 player.sendMessage(Text.literal("[" + player.getName().getString() + "]: ainda aqui").formatted(Formatting.DARK_GRAY), false);
@@ -99,10 +100,14 @@ public final class AfterimageMod implements ModInitializer {
         player.sendMessage(Text.literal(message).formatted(Formatting.GRAY), false);
     }
 
+    private static void play(ServerPlayerEntity player, net.minecraft.sound.SoundEvent sound, SoundCategory category, float volume, float pitch) {
+        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(), sound, category, volume, pitch);
+    }
+
     private static void spawnAnomaly(ServerPlayerEntity player) {
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = (ServerWorld) player.getWorld();
         Vec3d behind = player.getRotationVec(1.0f).multiply(-15.0);
-        Vec3d center = player.getPos().add(behind);
+        Vec3d center = player.getEntityPos().add(behind);
         List<UUID> ids = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
             ArmorStandEntity stand = new ArmorStandEntity(EntityType.ARMOR_STAND, world);
@@ -123,12 +128,12 @@ public final class AfterimageMod implements ModInitializer {
     private static void updateAnomaly(ServerPlayerEntity player) {
         List<UUID> ids = anomaly.get(player.getUuid());
         if (ids == null || ids.isEmpty()) return;
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = (ServerWorld) player.getWorld();
         Vec3d look = player.getRotationVec(1.0f).normalize();
         for (UUID id : ids) {
             var entity = world.getEntity(id);
             if (!(entity instanceof ArmorStandEntity stand)) continue;
-            Vec3d delta = stand.getPos().subtract(player.getEyePos());
+            Vec3d delta = stand.getEntityPos().subtract(player.getEyePos());
             double distance = delta.length();
             double dot = look.dotProduct(delta.normalize());
             if (distance < 8.0 || (distance < 24.0 && dot > 0.985)) {
@@ -137,8 +142,8 @@ public final class AfterimageMod implements ModInitializer {
                     if (e != null) e.discard();
                 }
                 anomaly.remove(player.getUuid());
-                player.playSoundToPlayer(SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.AMBIENT, 0.8f, 0.65f);
-                player.playSoundToPlayer(SoundEvents.ENTITY_WARDEN_HEARTBEAT, SoundCategory.AMBIENT, 0.55f, 0.7f);
+                play(player, SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.AMBIENT, 0.8f, 0.65f);
+                play(player, SoundEvents.ENTITY_WARDEN_HEARTBEAT, SoundCategory.AMBIENT, 0.55f, 0.7f);
                 whisper(player, "Você percebeu. Ele também.");
                 return;
             }
@@ -164,11 +169,10 @@ public final class AfterimageMod implements ModInitializer {
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, 1200, 254, false, false, true));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 1200, 254, false, false, true));
         player.setVelocity(Vec3d.ZERO);
-        player.velocityModified = true;
     }
 
     private static Path cachePath(MinecraftServer server) {
-        return server.getSavePath(World.OVERWORLD).resolve(".opt_state_cache");
+        return server.getSavePath(WorldSavePath.ROOT).resolve(".opt_state_cache");
     }
 
     private static void saveProgress(MinecraftServer server) {
