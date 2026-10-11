@@ -100,8 +100,8 @@ public final class AfterimageMod implements ModInitializer {
         player.sendMessage(Text.literal(message).formatted(Formatting.GRAY), false);
     }
 
-    private static void play(ServerPlayerEntity player, net.minecraft.registry.entry.RegistryEntry<net.minecraft.sound.SoundEvent> sound, SoundCategory category, float volume, float pitch) {
-        player.getEntityWorld().playSound(null, player.getX(), player.getY(), player.getZ(), sound.value(), category, volume, pitch);
+    private static void play(ServerPlayerEntity player, net.minecraft.sound.SoundEvent sound, SoundCategory category, float volume, float pitch) {
+        player.getEntityWorld().playSound(null, player.getX(), player.getY(), player.getZ(), sound, category, volume, pitch);
     }
 
     private static void spawnAnomaly(ServerPlayerEntity player) {
