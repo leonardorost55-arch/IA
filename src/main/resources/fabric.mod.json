@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "afterimage",
+  "version": "${version}",
+  "name": "AFTERIMAGE: Um ARG Silencioso",
+  "description": "Terror psicológico gradual dentro do Minecraft. Nada sai da janela do jogo.",
+  "authors": [
+    "Afterimage Team"
+  ],
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.afterimage.AfterimageMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
